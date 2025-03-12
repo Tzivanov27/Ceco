@@ -21,14 +21,14 @@
   <br>
   <div id="drop-area">📂 Влачи и пусни текстов файл тук</div>
   <button onclick="checkText()">🔍 Провери текст</button>
-  <button onclick="autoCorrectText()">⚙️ Поправи автоматично</button>
+  <button onclick="autoCorrect()">⚙️ Поправи автоматично</button>
   <button onclick="downloadText()">📥 Свали коригирания текст</button>
   <div id="result"></div>
 
   <script>
     let bulgarianWords = [];
+    let corrections = {};
 
-    // ✅ Зарежда речника при стартиране
     async function loadDictionary() {
       try {
         const response = await fetch('bulgarian_dict.txt');
@@ -42,11 +42,10 @@
       }
     }
 
-    // ✅ Проверка на текста за грешки
     function checkText() {
       const inputText = document.getElementById("textInput").value;
       const words = inputText.split(/(\s+)/); 
-      let correctedText = ""; 
+      let correctedText = "";
       let hasErrors = false;
 
       let markedText = words.map(word => {
@@ -56,7 +55,8 @@
         if (cleanWord && !bulgarianWords.includes(cleanWord)) {
           console.log("❌ НЕ Е в речника:", cleanWord);
           hasErrors = true;
-          correctedText += `[${word}] `; 
+          corrections[cleanWord] = `[${word}]`; 
+          correctedText += `[${word}] `;
           return `<span class='error' title='Възможна грешка'>${word}</span>`;
         } else {
           correctedText += word;
@@ -65,23 +65,22 @@
         }
       }).join('');
 
-      console.log("Коригиран текст:", correctedText);
-      document.getElementById("result").innerHTML = hasErrors ? correctedText.trim() : "✅ Няма грешки!";
+      document.getElementById("textInput").value = inputText; 
+      document.getElementById("result").innerHTML = hasErrors ? markedText : "<p>✅ Няма грешки!</p>";
     }
 
-    // ✅ Автоматична корекция (премахва думи извън речника)
-    function autoCorrectText() {
-      const inputText = document.getElementById("textInput").value;
-      const words = inputText.split(/\s+/);
-      let correctedWords = words.map(word => {
+    function autoCorrect() {
+      let inputText = document.getElementById("textInput").value;
+      let words = inputText.split(/(\s+)/); 
+      let correctedText = words.map(word => {
         let cleanWord = word.replace(/[^\p{L}]/gu, '').toLowerCase();
-        return bulgarianWords.includes(cleanWord) ? word : "";
-      });
-      document.getElementById("textInput").value = correctedWords.join(" ").trim();
-      document.getElementById("result").innerText = "✅ Автоматична корекция направена!";
+        return corrections[cleanWord] ? corrections[cleanWord] : word;
+      }).join('');
+
+      document.getElementById("textInput").value = correctedText;
+      document.getElementById("result").innerHTML = "<p>✅ Грешките са поправени!</p>";
     }
 
-    // ✅ Поддръжка на drag & drop за файлове
     let dropArea = document.getElementById("drop-area");
     dropArea.addEventListener("dragover", e => { e.preventDefault(); });
     dropArea.addEventListener("drop", e => {
@@ -94,7 +93,6 @@
       }
     });
 
-    // ✅ Запазване на коригирания текст като файл
     function downloadText() {
       const text = document.getElementById("textInput").value;
       const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
@@ -104,7 +102,6 @@
       a.click();
     }
 
-    // Зареждане на речника при стартиране
     loadDictionary();
   </script>
 </body>
