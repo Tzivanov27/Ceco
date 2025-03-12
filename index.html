@@ -34,18 +34,21 @@ const corrections = {
   "който": "които"
 };
 
+// ✅ Зареждане на речника без грешка
 async function loadDictionary() {
   try {
-    const response = await fetch('bulgarian_dict.txt');
-    const data = await response.text();
-    bulgarianWords = data.split("\n").map(word => word.trim().toLowerCase());
+    const response = await fetch('bulgarian_dict.txt'); // Зарежда речника
+    const text = await response.text();
+    bulgarianWords = text.split("\n").map(word => word.trim().toLowerCase());
+    console.log("📂 Речник зареден:", bulgarianWords.slice(0, 10)); // Първите 10 думи за проверка
     document.getElementById("loading-status").innerText = "Речникът е зареден! ✅";
-  } catch(e) {
-    document.getElementById("loading-status").innerText = "Проблем при зареждане на речника ❌";
-    alert("Проблем със зареждането: " + e);
+  } catch (e) {
+    document.getElementById("loading-status").innerText = "❌ Проблем при зареждане на речника!";
+    console.error("Грешка при зареждането:", e);
   }
 }
 
+// ✅ Проверка на правописа
 function checkText() {
   const inputText = document.getElementById("textInput").value;
   const words = inputText.split(/(\s+)/);
@@ -69,7 +72,7 @@ function checkText() {
   document.getElementById("result").innerText = hasErrors ? correctedText.trim() : "";
 }
 
-// Drag and Drop
+// ✅ Влачене и пускане на файлове
 let dropArea = document.getElementById("drop-area");
 dropArea.addEventListener("dragover", e => { e.preventDefault(); });
 dropArea.addEventListener("drop", e => {
@@ -82,7 +85,7 @@ dropArea.addEventListener("drop", e => {
   }
 });
 
-// Download Text
+// ✅ Изтегляне на коригирания текст
 function downloadText() {
   const text = document.getElementById("result").innerText;
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
@@ -92,7 +95,7 @@ function downloadText() {
   a.click();
 }
 
-// Зареди речника при стартиране на страницата
+// Зарежда речника при стартиране на страницата
 loadDictionary();
 </script>
 </body>
