@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Цецо - Правописен Коректор</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+    textarea { width: 80%; height: 150px; font-size: 16px; padding: 10px; }
+    button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+    #drop-area { border: 2px dashed #ccc; padding: 20px; margin: 10px auto; width: 80%; }
+    #loading-status { font-weight: bold; margin-bottom: 10px; }
+    #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; min-height: 50px; }
+    .error { color: red; font-weight: bold; text-decoration: underline; cursor: pointer; }
+    .corrected { color: green; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>🚀 Цецо - Правописен Коректор</h2>
+  <div id="loading-status">Зареждам речника...</div>
+  <textarea id="textInput" placeholder="Напиши текст тук..."></textarea>
+  <br>
+  <div id="drop-area">📂 Влачи и пусни текстов файл тук</div>
+  <button onclick="checkText()">🔍 Провери текст</button>
+  <button onclick="autoCorrectText()">🛠 Поправи автоматично</button>
+  <button onclick="downloadText()">📥 Свали коригирания текст</button>
+  <div id="result"></div>
+
+  <script>
+    let bulgarianWords = [];
+    const suggestions = { "ас": "аз", "немога": "не мога", "четя": "чета", "всекиден": "всеки ден" };
+
+    async function loadDictionary() {
+      try {
+        const response = await fetch('bulgarian_dict.txt');
+        const text = await response.text();
+        bulgarianWords = text.split("\n").map(word => word.trim().toLowerCase());
+        console.log("✅ Речник зареден:", bulgarianWords.length, "думи");
+        document.getElementById("loading-status").innerText = "Речникът е зареден! ✅";
+      } catch (e) {
+        console.error("❌ Грешка при зареждане на речника:", e);
+        document.getElementById("loading-status").innerText = "⚠️ Проблем при зареждане!";
+      }
+    }
+
+    function checkText() {
+      const inputText = document.getElementById("textInput").value;
+      const words = inputText.split(/(\s+)/);
+      let correctedText = "";
+      let hasErrors = false;
+
+      let markedText = words.map(word => {
+        let cleanWord = word.replace(/[^\p{L}]/gu, '').toLowerCase();
+        console.log("🔍 Проверявам дума:", cleanWord);
+
+        if (cleanWord && !bulgarianWords.includes(cleanWord)) {
+          console.log("❌ НЕ Е в речника:", cleanWord);
+          hasErrors = true;
+          let suggestion = suggestions[cleanWord] || "?";
+          correctedText += `[${suggestion}] `;
+          return `<span class='error' title='Предложение: ${suggestion}'>${word}</span>`;
+        } else {
+          correctedText += word;
+          console.log("✅ Намерена в речника:", cleanWord);
+          return word;
+        }
+      }).join('');
+
+      document.getElementById("textInput").innerHTML = markedText;
+      document.getElementById("result").innerText = hasErrors ? correctedText.trim() : "✅ Няма грешки!";
+    }
+
+    function autoCorrectText() {
+      let inputText = document.getElementById("textInput").value;
+      let words = inputText.split(/(\s+)/);
+
+      let autoCorrectedText = words.map(word => {
+        let cleanWord = word.replace(/[^\p{L}]/gu, '').toLowerCase();
+        return suggestions[cleanWord] ? suggestions[cleanWord] : word;
+      }).join('');
+
+      document.getElementById("textInput").value = autoCorrectedText;
+      document.getElementById("result").innerText = "✅ Текстът е автоматично коригиран!";
+    }
+
+    function downloadText() {
+      const text = document.getElementById("result").innerText;
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "corrected_text.txt";
+      a.click();
+    }
+
+    loadDictionary();
+  </script>
+</body>
+</html>
 
